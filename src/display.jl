@@ -19,3 +19,14 @@ function ascii_art()
 end
 
 Base.show(io::IO, x::AsciiArt) = print(io, x.x)
+
+
+function toString(b::DenseMatrix)
+    a = ccall((:dense_matrix_str, libsymengine), Cstring, (Ptr{Void}, ), b.ptr)
+    string = unsafe_string(a)
+    ccall((:basic_str_free, libsymengine), Void, (Cstring, ), a)
+    string = replace(string, "**", "^") # de pythonify
+    return string
+end
+
+Base.show(io::IO, b::DenseMatrix) = print(io, toString(b))

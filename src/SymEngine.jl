@@ -12,8 +12,10 @@ export series
 
 include("../deps/deps.jl")
 
-include("ctypes.jl")
 include("types.jl")
+include("ctypes.jl")
+include("basic.jl")
+include("matrices.jl")
 include("display.jl")
 include("mathops.jl")
 include("mathfuns.jl")

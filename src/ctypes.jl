@@ -21,15 +21,17 @@ function Base.length(s::CSetBasic)
     ccall((:setbasic_size, libsymengine), UInt, (Ptr{Void},), s.ptr)
 end
 
-function Base.getindex(s::CSetBasic, n::UInt)
+function Base.getindex(s::CSetBasic, n::Cuint)
     result = Basic()
-    ccall((:setbasic_get, libsymengine), Void, (Ptr{Void}, UInt, Ptr{Basic}), s.ptr, n, &result)
+    ccall((:setbasic_get, libsymengine), Void, (Ptr{Void}, Cuint, Ptr{Basic}), s.ptr, n - 1, &result)
     result
 end
 
+Base.getindex(s::CSetBasic, n::Integer) = Base.getindex(s, convert(Cuint, n))
+
 function Base.convert(::Type{Vector}, x::CSetBasic)
     n = Base.length(x)
-    [x[i-1] for i in 1:n]
+    [x[i] for i in 1:n]
 end
 Base.convert(::Type{Set}, x::CSetBasic) = Set(convert(Vector, x))
 
@@ -52,17 +54,36 @@ function CVecBasic_free(x::CVecBasic)
     end
 end
 
+function Base.push!(x::CVecBasic, y::Basic)
+    ccall((:vecbasic_push_back, libsymengine), Void, (Ptr{Void}, Ptr{Basic}), x.ptr, &y)
+end
+
+Base.push!(x::CVecBasic, y::Number) = Base.push!(x, convert(Basic, y))
+
 function Base.length(s::CVecBasic)
     ccall((:vecbasic_size, libsymengine), UInt, (Ptr{Void},), s.ptr)
 end
 
-function Base.getindex(s::CVecBasic, n::UInt)
+function Base.getindex(s::CVecBasic, n::Cuint)
     result = Basic()
-    ccall((:vecbasic_get, libsymengine), Void, (Ptr{Void}, UInt, Ptr{Basic}), s.ptr, n, &result)
+    ccall((:vecbasic_get, libsymengine), Void, (Ptr{Void}, Cuint, Ptr{Basic}), s.ptr, n - 1, &result)
     result
 end
 
+Base.getindex(s::CVecBasic, n::Integer) = Base.getindex(s, convert(Cuint, n))
+
 function Base.convert(::Type{Vector}, x::CVecBasic)
     n = Base.length(x)
-    [x[i-1] for i in 1:n]
+    [x[i] for i in 1:n]
 end
+
+function CVecBasic(x::Array)
+    z = CVecBasic()
+    for I in eachindex(x)
+        push!(z, getindex(x, I))
+    end
+    z
+end
+
+Base.convert(::Type{CVecBasic}, x::Array) = CVecBasic(x)
+

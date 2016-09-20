@@ -112,3 +112,9 @@ A = [x 2; x 1]
 ## check that unique work (hash)
 x,y,z = symbols("x y z")
 @test length(SymEngine.free_symbols([x*y, y,z])) == 3
+
+## check matrices
+a = SymEngine.Matrix([[1, x] [y, z]])
+@test a[1, 2] == y
+a[1, 2] = x
+@test a[1, 2] == x
