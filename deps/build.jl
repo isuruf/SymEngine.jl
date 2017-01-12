@@ -5,6 +5,11 @@ using Conda
 
 libsymengine = library_dependency("libsymengine", aliases=["libsymengine", "symengine"])
 
+@osx_only begin
+    using Homebrew
+    provides(Homebrew.HB, "homebrew/science/symengine", libsymengine, os = :Darwin)
+end
+
 if is_windows()
     path = abspath(dirname(@__FILE__), "usr")
     isdir(path) || mkdir(path)
