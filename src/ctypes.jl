@@ -67,6 +67,60 @@ function Base.convert(::Type{Vector}, x::CVecBasic)
     [x[i-1] for i in 1:n]
 end
 
+## MapBasicBasic
+
+
+type CMapBasicBasic
+    ptr::Ptr{Void}
+end
+
+function CMapBasicBasic()
+    z = CMapBasicBasic(ccall((:mapbasicbasic_new, libsymengine), Ptr{Void}, ()))
+    finalizer(z, CMapBasicBasic_free)
+    z
+end
+
+function CMapBasicBasic_free(x::CMapBasicBasic)
+    if x.ptr != C_NULL
+        ccall((:mapbasicbasic_free, libsymengine), Void, (Ptr{Void},), x.ptr)
+        x.ptr = C_NULL
+    end
+end
+
+function Base.length(s::CMapBasicBasic)
+    ccall((:mapbasicbasic_size, libsymengine), UInt, (Ptr{Void},), s.ptr)
+end
+
+function Base.getindex(s::CMapBasicBasic, k)
+    result = Basic()
+    k_ = convert(Basic, k)
+    ret = ccall((:mapbasicbasic_get, libsymengine), UInt, (Ptr{Void}, Ptr{Basic}, Ptr{Basic}), s.ptr, &k_, &result)
+    if ret == 0
+        throw(KeyError(k))
+    end
+    result
+end
+
+function Base.haskey(s::CMapBasicBasic, k)
+    result = Basic()
+    k_ = convert(Basic, k)
+    ret = ccall((:mapbasicbasic_get, libsymengine), UInt, (Ptr{Void}, Ptr{Basic}, Ptr{Basic}), s.ptr, &k_, &result)
+    return (ret == 1)
+end
+
+function Base.setindex!(s::CMapBasicBasic, v, k)
+    k_ = convert(Basic, k)
+    v_ = convert(Basic, v)
+    ccall((:mapbasicbasic_insert, libsymengine), Void, (Ptr{Void}, Ptr{Basic}, Ptr{Basic}), s.ptr, &k, &v)
+end
+
+function Base.convert(::Type{CMapBasicBasic}, x::Dict)
+    d = CMapBasicBasic()
+    for kv in x
+        d[kv[1]] = kv[2]
+    end
+    d
+end
 
 ## Dense matrix
 

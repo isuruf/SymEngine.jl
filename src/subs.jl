@@ -6,13 +6,16 @@ Substitute values into a symbolic expression.
 
 Examples
 ```
-@syms x y
+@vars x y
 ex = x^2 + y^2
 subs(ex, x, 1) # 1 + y^2
 subs(ex, (x, 1)) # 1 + y^2
 subs(ex, (x, 1), (y,x)) # 1 + x^2, values are substituted left to right.
 subs(ex, x=>1)  # alternate to subs(x, (x,1))
 subs(ex, x=>1, y=>1) # ditto
+# If a Dict is given, substitution is simulataneous
+subs(ex, Dict(x=>y, y=>x)) # x^2 + y^2
+subs(ex, Dict(x=>y, y=>2)) # 4 + y^2
 ```
 """
 function subs{T<:SymbolicType, S<:SymbolicType}(ex::T, var::S, val)
@@ -24,6 +27,13 @@ subs{T <: SymbolicType, S<:SymbolicType}(ex::T, y::Tuple{S, Any}) = subs(ex, y[1
 subs{T <: SymbolicType, S<:SymbolicType}(ex::T, y::Tuple{S, Any}, args...) = subs(subs(ex, y), args...)
 subs{T <: SymbolicType}(ex::T, d::Pair...) = subs(ex, [(p.first, p.second) for p in d]...)
 
+function subs{T<:SymbolicType}(ex::T, d::CMapBasicBasic)
+    s = Basic()
+    ccall((:basic_subs, libsymengine), Void, (Ptr{Basic}, Ptr{Basic}, Ptr{Void}), &s, &ex, d.ptr)
+    return s
+end
+
+subs{T<:SymbolicType}(ex::T, d::Dict) = subs(ex, Base.convert(CMapBasicBasic, d))
 
 ## Allow an expression to be called, as with ex(2). When there is more than one symbol, one can rely on order of `free_symbols` or
 ## be explicit by passing in pairs : `ex(x=>1, y=>2)` or a dict `ex(Dict(x=>1, y=>2))`.

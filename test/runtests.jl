@@ -105,6 +105,9 @@ for val1 in samples, val2 in samples
     @test subs(ex, x => val1, y => val2) == val1^2 + val2^2
 end
 
+@test subs(ex, Dict(x=>y, y=>x)) == ex
+@test subs(ex, Dict(x=>y, y=>2)) == y^2 + 4
+
 ## lambidfy
 @test norm(lambdify(sin(Basic(1))) - sin(1)) <= 1e-14
 fn = lambdify(exp(PI/2*x))
